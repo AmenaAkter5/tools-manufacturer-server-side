@@ -35,6 +35,17 @@ async function run() {
 
         // tools collection
         const toolsCollection = client.db("tools_manufacturer").collection("tools");
+
+
+        // get all tools
+        // link: http://localhost:5000/tools
+
+        app.get('/tools', async (req, res) => {
+            const query = {};
+            const cursor = toolsCollection.find(query);
+            const tools = await cursor.toArray();
+            res.send(tools);
+        })
     }
 
     finally {
