@@ -68,6 +68,27 @@ async function run() {
         });
 
 
+        // update data : update a tool's quantity after getting order
+        // link: http://localhost:5000/tools/${_id}
+
+        app.put('/tools/:id', async (req, res) => {
+
+            const id = req.params.id;
+            const updatedItem = req.body;
+
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+
+            const updatedDoc = {
+                $set: {
+                    available: updatedItem.quantity,
+                }
+            };
+            const result = await toolsCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
+
+
 
 
         /* ----- ORDER COLLECTION API ----- 
