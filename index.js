@@ -95,6 +95,19 @@ async function run() {
         -----------------------------------*/
 
 
+        // get bookings for specific user
+        // link: http://localhost:5000/orders?buyer=${email}
+
+
+        app.get('/orders', async (req, res) => {
+
+            const buyer = req.query.buyer;
+            const query = { buyer: buyer };
+            const orders = await orderCollection.find(query).toArray();
+            res.send(orders);
+        })
+
+
         // post orders
         // link: http://localhost:5000/orders
 
