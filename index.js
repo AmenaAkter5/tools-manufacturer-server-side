@@ -36,6 +36,14 @@ async function run() {
         // tools collection
         const toolsCollection = client.db("tools_manufacturer").collection("tools");
 
+        // purchase order collection
+        const orderCollection = client.db("tools_manufacturer").collection("orders");
+
+
+
+        /* ----- TOOLS COLLECTION API ----- 
+        -----------------------------------*/
+
 
         // get all tools
         // link: http://localhost:5000/tools
@@ -45,18 +53,38 @@ async function run() {
             const cursor = toolsCollection.find(query);
             const tools = await cursor.toArray();
             res.send(tools);
-        })
+        });
 
 
         // get a specific tool by id
         // link: http://localhost:5000/tools/${id}
 
+        // app.get('/tools/:id', verifyJWT, async (req, res) => {
         app.get('/tools/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const tool = await toolsCollection.findOne(query);
             res.send(tool);
+        });
+
+
+
+
+        /* ----- ORDER COLLECTION API ----- 
+        -----------------------------------*/
+
+
+        // post orders
+        // link: http://localhost:5000/orders
+
+
+        // order set
+        app.post('/orders', async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result);
         })
+
 
     }
 
