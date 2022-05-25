@@ -39,6 +39,39 @@ async function run() {
         // purchase order collection
         const orderCollection = client.db("tools_manufacturer").collection("orders");
 
+        // create user collection
+        const userCollection = client.db("tools_manufacturer").collection("users")
+
+
+
+        // update user and issue token
+
+        // update user information [create new or update/modify]
+        // link: http://localhost:5000/user/${email}
+
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+
+            // create a document that sets the user data
+            const updateDoc = {
+                $set: user
+            };
+
+            // update user
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+
+            // token issue
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' });
+
+
+            // res.send({ result, accessToken: token });
+            res.send({ result, token });
+        })
+
 
 
         /* ----- TOOLS COLLECTION API ----- 
