@@ -71,6 +71,24 @@ async function run() {
 
 
 
+        // verify admin
+
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            // console.log(requester);
+            const requesterAccount = await userCollection.findOne({ email: requester });
+            // console.log(requesterAccount);
+
+            if (requesterAccount.role === 'admin') {
+                next();
+            }
+            else {
+                res.status(403).send({ message: 'Forbidden' });
+            }
+        }
+
+
+
         /* ----- USERS COLLECTION API ----- 
         -----------------------------------*/
 
@@ -79,8 +97,7 @@ async function run() {
         // link: http://localhost:5000/users
 
 
-        app.get('/users', async (req, res) => {
-
+        app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users);
         })
@@ -113,23 +130,16 @@ async function run() {
 
 
 
-        // verify admin
-
-        const verifyAdmin = async (req, res, next) => {
-            const requester = req.decoded.email;
-            // console.log(requester);
-            const requesterAccount = await userCollection.findOne({ email: requester });
-            // console.log(requesterAccount);
-
-            if (requesterAccount.role === 'admin') {
-                next();
-            }
-            else {
-                res.status(403).send({ message: 'Forbidden' });
-            }
-        }
+        // get all admin
+        // link: http://localhost:5000/admin/${email}
 
 
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin });
+        })
 
 
 
@@ -209,16 +219,36 @@ async function run() {
         -----------------------------------*/
 
 
-        // get bookings for specific user
+        // get bookings for specific verified user
         // link: http://localhost:5000/orders?buyer=${email}
 
 
-        app.get('/orders', async (req, res) => {
+        app.get('/orders', verifyJWT, async (req, res) => {
 
             const buyer = req.query.buyer;
-            const query = { buyer: buyer };
-            const orders = await orderCollection.find(query).toArray();
-            res.send(orders);
+            const decodedEmail = req.decoded.email;
+
+            if (buyer === decodedEmail) {
+                const query = { buyer: buyer };
+                const orders = await orderCollection.find(query).toArray();
+                res.send(orders);
+            }
+            else {
+                return res.status(403).send({ message: 'Forbidden Access' });
+            }
+
+        })
+
+
+
+        // get a specific order for verified user
+        // link: http://localhost:5000/orders/${id}
+
+        app.get('/orders/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const order = await orderCollection.findOne(query);
+            res.send(order);
         })
 
 
@@ -226,7 +256,7 @@ async function run() {
         // link: http://localhost:5000/orders
 
 
-        // order set
+        // post order
         app.post('/orders', async (req, res) => {
             const order = req.body;
             const result = await orderCollection.insertOne(order);
