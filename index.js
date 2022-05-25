@@ -72,6 +72,9 @@ async function run() {
         // create payment collection
         const paymentCollection = client.db("tools_manufacturer").collection("payments");
 
+        // shipped payment collection
+        const shippedCollection = client.db("tools_manufacturer").collection("shipped");
+
 
 
         // verify admin
@@ -222,11 +225,23 @@ async function run() {
         -----------------------------------*/
 
 
-        // get bookings for specific verified user
+        // get all orders
+        // link: http://localhost:5000/orders
+
+        app.get('/orders', verifyJWT, async (req, res) => {
+            const query = {};
+            const cursor = orderCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
+
+        })
+
+
+        // get orders for specific verified user
         // link: http://localhost:5000/orders?buyer=${email}
 
 
-        app.get('/orders', verifyJWT, async (req, res) => {
+        app.get('/order', verifyJWT, async (req, res) => {
 
             const buyer = req.query.buyer;
             const decodedEmail = req.decoded.email;
@@ -269,7 +284,7 @@ async function run() {
         // delete order
         // link: http://localhost:5000/orders/${id}
 
-        // delete data : delete a specific fruit item
+        // delete data : delete a specific order item
         app.delete('/orders/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -294,6 +309,26 @@ async function run() {
 
             const result = await paymentCollection.insertOne(payment);
             const updatedOrder = await orderCollection.updateOne(filter, updatedDoc);
+            res.send(updatedOrder);
+        })
+
+
+        // update orders
+        // link: http://localhost:5000/orders/${_id}
+
+        app.put('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const shipment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true }
+            const updatedDoc = {
+                $set: {
+                    shipment: true
+                }
+            }
+
+            const result = await shippedCollection.insertOne(shipment);
+            const updatedOrder = await orderCollection.updateOne(filter, updatedDoc, options);
             res.send(updatedOrder);
         })
 
