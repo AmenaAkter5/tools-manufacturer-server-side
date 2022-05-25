@@ -4,7 +4,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-// stripe
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 
 
@@ -68,6 +68,9 @@ async function run() {
 
         // create user collection
         const userCollection = client.db("tools_manufacturer").collection("users")
+
+        // create payment collection
+        const paymentCollection = client.db("tools_manufacturer").collection("payments");
 
 
 
@@ -263,6 +266,54 @@ async function run() {
             res.send(result);
         })
 
+
+        // update orders
+        // link: http://localhost:5000/orders/${_id}
+
+        app.patch('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+
+            const result = await paymentCollection.insertOne(payment);
+            const updatedOrder = await orderCollection.updateOne(filter, updatedDoc);
+            res.send(updatedOrder);
+        })
+
+
+        /* ----- PAYMENT COLLECTION API ----- 
+        -------------------------------------*/
+
+
+        // payement intention api create
+        // link: http://localhost:5000/create-payment-intent
+
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            // const { price } = req.body;
+            const order = req.body;
+            // console.log(order);
+            const price = order.price;
+            const quantity = order.quantity;
+            const amount = price * quantity;
+
+            // Create a PaymentIntent with the order amount and currency
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                // currency: "eur",
+                currency: "usd",
+                payment_method_types: ['card']
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            });
+        })
 
     }
 
