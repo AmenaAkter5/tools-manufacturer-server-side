@@ -20,6 +20,33 @@ app.use(express.json());
 
 
 
+// verify jwt
+
+function verifyJWT(req, res, next) {
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'Unauthorized Access' });
+    }
+    const token = authHeader.split(' ')[1];
+
+    // verify jwt
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden Access' });
+        }
+
+        else {
+            req.decoded = decoded;
+            // console.log(decoded);
+            next();
+        }
+    })
+}
+
+
+
 // connect with mongo database
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wgfl4.mongodb.net/?retryWrites=true&w=majority`;
@@ -44,6 +71,22 @@ async function run() {
 
 
 
+        /* ----- USERS COLLECTION API ----- 
+        -----------------------------------*/
+
+
+        // get all users [only admin can access this]
+        // link: http://localhost:5000/users
+
+
+        app.get('/users', async (req, res) => {
+
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        })
+
+
+
         // update user and issue token
 
         // update user information [create new or update/modify]
@@ -60,17 +103,55 @@ async function run() {
             const updateDoc = {
                 $set: user
             };
-
-            // update user
             const result = await userCollection.updateOne(filter, updateDoc, options);
 
             // token issue
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' });
 
-
-            // res.send({ result, accessToken: token });
             res.send({ result, token });
+        });
+
+
+
+        // verify admin
+
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            // console.log(requester);
+            const requesterAccount = await userCollection.findOne({ email: requester });
+            // console.log(requesterAccount);
+
+            if (requesterAccount.role === 'admin') {
+                next();
+            }
+            else {
+                res.status(403).send({ message: 'Forbidden' });
+            }
+        }
+
+
+
+
+
+        // get make admin request and create admin a user
+        // link: http://localhost:5000/user/admin/${email}
+
+
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+
+            // create a document that sets the user's updated data
+            const updateDoc = {
+                $set: { role: 'admin' }
+            };
+
+            // update user
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+
         })
+
 
 
 
