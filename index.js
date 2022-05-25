@@ -259,10 +259,21 @@ async function run() {
         // link: http://localhost:5000/orders
 
 
-        // post order
         app.post('/orders', async (req, res) => {
             const order = req.body;
             const result = await orderCollection.insertOne(order);
+            res.send(result);
+        })
+
+
+        // delete order
+        // link: http://localhost:5000/orders/${id}
+
+        // delete data : delete a specific fruit item
+        app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(query);
             res.send(result);
         })
 
@@ -295,9 +306,7 @@ async function run() {
         // link: http://localhost:5000/create-payment-intent
 
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
-            // const { price } = req.body;
             const order = req.body;
-            // console.log(order);
             const price = order.price;
             const quantity = order.quantity;
             const amount = price * quantity;
