@@ -84,9 +84,7 @@ async function run() {
 
         const verifyAdmin = async (req, res, next) => {
             const requester = req.decoded.email;
-            // console.log(requester);
             const requesterAccount = await userCollection.findOne({ email: requester });
-            // console.log(requesterAccount);
 
             if (requesterAccount.role === 'admin') {
                 next();
@@ -102,9 +100,8 @@ async function run() {
         -----------------------------------*/
 
 
-        // get all users [only admin can access this]
-        // link: http://localhost:5000/users
 
+        // get all users [only admin can access this]
 
         app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const users = await userCollection.find().toArray();
@@ -114,10 +111,7 @@ async function run() {
 
 
         // update user and issue token
-
         // update user information [create new or update/modify]
-        // link: http://localhost:5000/user/${email}
-
 
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
@@ -140,8 +134,6 @@ async function run() {
 
 
         // get all admin
-        // link: http://localhost:5000/admin/${email}
-
 
         app.get('/admin/:email', async (req, res) => {
             const email = req.params.email;
@@ -153,8 +145,6 @@ async function run() {
 
 
         // get make admin request and create admin a user
-        // link: http://localhost:5000/user/admin/${email}
-
 
         app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
@@ -179,7 +169,6 @@ async function run() {
 
 
         // get all tools
-        // link: http://localhost:5000/tools
 
         app.get('/tools', async (req, res) => {
             const query = {};
@@ -190,9 +179,7 @@ async function run() {
 
 
         // get a specific tool by id
-        // link: http://localhost:5000/tools/${id}
 
-        // app.get('/tools/:id', verifyJWT, async (req, res) => {
         app.get('/tools/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -203,7 +190,6 @@ async function run() {
 
 
         // post a tool data
-        // link: http://localhost:5000/tools
 
         app.post('/tools', async (req, res) => {
             const tool = req.body;
@@ -214,7 +200,6 @@ async function run() {
 
 
         // update data : update a tool's quantity after getting order
-        // link: http://localhost:5000/tools/${_id}
 
         app.put('/tools/:id', async (req, res) => {
 
@@ -235,7 +220,6 @@ async function run() {
 
 
         // delete tool
-        // link: http://localhost:5000/tool/${id}
 
         // delete data : delete a specific tool item
         app.delete('/tool/:id', async (req, res) => {
@@ -247,12 +231,13 @@ async function run() {
 
 
 
+
+
         /* ----- REVIEW COLLECTION API ----- 
         ------------------------------------*/
 
 
         // get all review
-        // link: http://localhost:5000/reviews
 
         app.get('/reviews', async (req, res) => {
             const query = {};
@@ -264,7 +249,6 @@ async function run() {
 
 
         // post a review data
-        // link: http://localhost:5000/reviews
 
         app.post('/review', async (req, res) => {
             const review = req.body;
@@ -273,12 +257,14 @@ async function run() {
         });
 
 
+
+
+
         /* ----- ORDER COLLECTION API ----- 
         -----------------------------------*/
 
 
         // get all orders
-        // link: http://localhost:5000/orders
 
         app.get('/orders', verifyJWT, async (req, res) => {
             const query = {};
@@ -290,8 +276,6 @@ async function run() {
 
 
         // get orders for specific verified user
-        // link: http://localhost:5000/order?buyer=${email}
-
 
         app.get('/order', verifyJWT, async (req, res) => {
 
@@ -312,7 +296,6 @@ async function run() {
 
 
         // get a specific order for verified user
-        // link: http://localhost:5000/orders/${id}
 
         app.get('/orders/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
@@ -322,9 +305,8 @@ async function run() {
         })
 
 
-        // post orders
-        // link: http://localhost:5000/orders
 
+        // post orders
 
         app.post('/orders', async (req, res) => {
             const order = req.body;
@@ -333,10 +315,9 @@ async function run() {
         })
 
 
-        // delete order
-        // link: http://localhost:5000/orders/${id}
 
         // delete data : delete a specific order item
+
         app.delete('/orders/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
@@ -346,7 +327,6 @@ async function run() {
 
 
         // update orders after payment
-        // link: http://localhost:5000/orders/${_id}
 
         app.patch('/order/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
@@ -366,7 +346,6 @@ async function run() {
 
 
         // update orders after shipment
-        // link: http://localhost:5000/orders/${_id}
 
         app.put('/order/:id', verifyJWT, async (req, res) => {
             const id = req.params.id;
@@ -385,12 +364,13 @@ async function run() {
         })
 
 
+
+
         /* ----- PAYMENT COLLECTION API ----- 
         -------------------------------------*/
 
 
         // payement intention api create
-        // link: http://localhost:5000/create-payment-intent
 
         app.post('/create-payment-intent', verifyJWT, async (req, res) => {
             const order = req.body;
