@@ -72,7 +72,10 @@ async function run() {
         // create payment collection
         const paymentCollection = client.db("tools_manufacturer").collection("payments");
 
-        // shipped payment collection
+        // create payment collection
+        const reviewCollection = client.db("tools_manufacturer").collection("reviews");
+
+        // create shipped collection
         const shippedCollection = client.db("tools_manufacturer").collection("shipped");
 
 
@@ -198,6 +201,18 @@ async function run() {
         });
 
 
+
+        // post a tool data
+        // link: http://localhost:5000/tools
+
+        app.post('/tools', async (req, res) => {
+            const tool = req.body;
+            const result = await toolsCollection.insertOne(tool);
+            res.send(result);
+        });
+
+
+
         // update data : update a tool's quantity after getting order
         // link: http://localhost:5000/tools/${_id}
 
@@ -219,6 +234,43 @@ async function run() {
         })
 
 
+        // delete tool
+        // link: http://localhost:5000/tool/${id}
+
+        // delete data : delete a specific tool item
+        app.delete('/tool/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await toolsCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
+
+        /* ----- REVIEW COLLECTION API ----- 
+        ------------------------------------*/
+
+
+        // get all review
+        // link: http://localhost:5000/reviews
+
+        app.get('/reviews', async (req, res) => {
+            const query = {};
+            const cursor = reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        });
+
+
+
+        // post a review data
+        // link: http://localhost:5000/reviews
+
+        app.post('/review', async (req, res) => {
+            const review = req.body;
+            const result = await reviewCollection.insertOne(review);
+            res.send(result);
+        });
 
 
         /* ----- ORDER COLLECTION API ----- 
@@ -238,7 +290,7 @@ async function run() {
 
 
         // get orders for specific verified user
-        // link: http://localhost:5000/orders?buyer=${email}
+        // link: http://localhost:5000/order?buyer=${email}
 
 
         app.get('/order', verifyJWT, async (req, res) => {
@@ -255,7 +307,7 @@ async function run() {
                 return res.status(403).send({ message: 'Forbidden Access' });
             }
 
-        })
+        });
 
 
 
@@ -293,7 +345,7 @@ async function run() {
         })
 
 
-        // update orders
+        // update orders after payment
         // link: http://localhost:5000/orders/${_id}
 
         app.patch('/order/:id', verifyJWT, async (req, res) => {
@@ -313,7 +365,7 @@ async function run() {
         })
 
 
-        // update orders
+        // update orders after shipment
         // link: http://localhost:5000/orders/${_id}
 
         app.put('/order/:id', verifyJWT, async (req, res) => {
@@ -349,7 +401,6 @@ async function run() {
             // Create a PaymentIntent with the order amount and currency
             const paymentIntent = await stripe.paymentIntents.create({
                 amount: amount,
-                // currency: "eur",
                 currency: "usd",
                 payment_method_types: ['card']
             });
